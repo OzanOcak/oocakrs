@@ -1,1 +1,14 @@
-/target
+# Rust
+**/target/
+**/*.rs.bk
+
+# Node (for reference backend)
+**/node_modules/
+
+# Env files (never commit secrets)
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS
+.DS_Store
