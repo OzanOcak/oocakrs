@@ -6,6 +6,8 @@ mod logging;
 mod middleware;
 mod routes;
 mod state;
+mod controllers;
+mod error; 
 
 use anyhow::Result;
 use state::AppState;
