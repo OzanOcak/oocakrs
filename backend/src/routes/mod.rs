@@ -1,6 +1,7 @@
 use axum::{routing::get, Json, Router};
 use serde_json::{json, Value};
 
+pub mod admin;
 pub mod likes;
 pub mod comments;
 pub mod user;
@@ -11,6 +12,7 @@ pub fn router() -> Router<crate::state::AppState> {
         .merge(likes::router())
         .merge(comments::router())
         .merge(user::router())
+        .merge(admin::router())
 }
 
 async fn hello() -> Json<Value> {
