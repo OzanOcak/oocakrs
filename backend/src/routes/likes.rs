@@ -1,7 +1,7 @@
 use axum::routing::{get, post};
 use axum::Router;
 
-use crate::controllers::likes::{get_likes, like, unlike};
+use crate::controllers::feature_controllers::likes::{get_likes, like, unlike};
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
