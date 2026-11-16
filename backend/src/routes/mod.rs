@@ -5,6 +5,7 @@ pub mod admin;
 pub mod likes;
 pub mod comments;
 pub mod user;
+pub mod visitor_count; 
 
 pub fn router() -> Router<crate::state::AppState> {
     Router::new()
@@ -13,6 +14,7 @@ pub fn router() -> Router<crate::state::AppState> {
         .merge(comments::router())
         .merge(user::router())
         .merge(admin::router())
+        .merge(visitor_count::router()) 
 }
 
 async fn hello() -> Json<Value> {
