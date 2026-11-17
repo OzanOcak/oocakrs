@@ -2,9 +2,10 @@ use axum::extract::{Query, State};
 use axum::Json;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use sqlx::Row;
 
 use crate::error::ApiError;
+use crate::services::count_users::count_users;
+use crate::services::get_all_users::get_all_users;
 use crate::state::AppState;
 
 #[derive(Deserialize)]
@@ -31,68 +32,8 @@ pub async fn admin(
         return Err(ApiError::BadRequest("Invalid page or limit value".into()));
     }
 
-    let offset = (q.page - 1) * q.limit;
-    let like_pattern = format!("%{}%", q.search_query);
-
-    let (rows, total): (Vec<sqlx::postgres::PgRow>, i64) =
-        match q.search_criteria.as_str() {
-            "email" => {
-                let rows = sqlx::query(
-                    "SELECT id, username, email, role
-                     FROM users
-                     WHERE email ILIKE $1
-                     ORDER BY id
-                     LIMIT $2 OFFSET $3",
-                )
-                .bind(&like_pattern)
-                .bind(q.limit)
-                .bind(offset)
-                .fetch_all(&state.db)
-                .await?;
-
-                let (count,): (i64,) =
-                    sqlx::query_as("SELECT COUNT(*) FROM users WHERE email ILIKE $1")
-                        .bind(&like_pattern)
-                        .fetch_one(&state.db)
-                        .await?;
-
-                (rows, count)
-            }
-            _ => {
-                let rows = sqlx::query(
-                    "SELECT id, username, email, role
-                     FROM users
-                     WHERE username ILIKE $1
-                     ORDER BY id
-                     LIMIT $2 OFFSET $3",
-                )
-                .bind(&like_pattern)
-                .bind(q.limit)
-                .bind(offset)
-                .fetch_all(&state.db)
-                .await?;
-
-                let (count,): (i64,) =
-                    sqlx::query_as("SELECT COUNT(*) FROM users WHERE username ILIKE $1")
-                        .bind(&like_pattern)
-                        .fetch_one(&state.db)
-                        .await?;
-
-                (rows, count)
-            }
-        };
-
-    let users: Vec<Value> = rows
-        .iter()
-        .map(|r| {
-            json!({
-                "id": r.get::<i32, _>("id"),
-                "username": r.get::<String, _>("username"),
-                "email": r.get::<String, _>("email"),
-                "role": r.get::<String, _>("role"),
-            })
-        })
-        .collect();
+    let users = get_all_users(&state.db, q.page, q.limit, &q.search_query, &q.search_criteria).await?;
+    let total = count_users(&state.db, &q.search_query, &q.search_criteria).await?;
 
     Ok(Json(json!({ "users": users, "total": total })))
 }

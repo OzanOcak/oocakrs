@@ -4,9 +4,8 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::error::ApiError;
+use crate::services::update_role::update_role;
 use crate::state::AppState;
-
-const VALID_ROLES: &[&str] = &["admin", "editor", "user"];
 
 #[derive(Deserialize)]
 pub struct UpdateRoleBody {
@@ -19,20 +18,6 @@ pub async fn update_user_role(
     Path(user_id): Path<i32>,
     Json(body): Json<UpdateRoleBody>,
 ) -> Result<Json<Value>, ApiError> {
-    if !VALID_ROLES.contains(&body.new_role.as_str()) {
-        return Err(ApiError::BadRequest("Invalid role".into()));
-    }
-
-    let result = sqlx::query("UPDATE users SET role = $1 WHERE id = $2")
-        .bind(&body.new_role)
-        .bind(user_id)
-        .execute(&state.db)
-        .await
-        .map_err(|e| ApiError::Internal(format!("Error updating role: {e}")))?;
-
-    if result.rows_affected() == 0 {
-        return Err(ApiError::NotFound("User not found".into()));
-    }
-
+    update_role(&state.db, user_id, &body.new_role).await?;
     Ok(Json(json!({ "message": "User role updated successfully" })))
 }

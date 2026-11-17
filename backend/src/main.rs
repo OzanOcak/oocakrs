@@ -7,7 +7,8 @@ mod middleware;
 mod routes;
 mod state;
 mod controllers;
-mod error; 
+mod error;
+mod services; 
 
 use anyhow::Result;
 use state::AppState;
